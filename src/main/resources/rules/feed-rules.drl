@@ -1,0 +1,123 @@
+package resources.rules
+
+import java.time.LocalDateTime;
+
+import com.example.social_media.entity.Post
+import com.example.social_media.entity.Like
+import com.example.social_media.entity.Hashtag
+import com.example.social_media.service.FeedRequest
+
+
+global FeedRequest feedRequest
+
+rule "Base score for all posts"
+salience 100
+when
+    $post : Post(
+        userId != feedRequest.user.id
+    )
+then
+    feedRequest.addScore($post, 0);
+end
+
+rule "Recommend post with hashtag liked by user"
+when
+    $like : Like(
+        userId == feedRequest.user.id,
+        $likedPost : post
+    )
+
+    $h : Hashtag() from $likedPost.hashtags
+
+    $candidatePost : Post(
+        userId != feedRequest.user.id,
+        this != $likedPost 
+    )
+    Hashtag( name == $h.name) from $candidatePost.hashtags
+then
+    feedRequest.addScore($candidatePost, 5);
+end
+
+rule "Recommend post with hashtag created by user"
+when
+    $candidatePost : Post(
+        userId != feedRequest.user.id
+    )
+
+    $h : Hashtag() from $candidatePost.hashtags
+
+    $myPost : Post(
+        userId == feedRequest.user.id
+    )
+    Hashtag( name == $h.name ) from $myPost.hashtags
+
+then
+    System.out.println("CREATED HASHTAG MATCH: " + $candidatePost.getId());
+    feedRequest.addScore($candidatePost, 3);
+end
+
+rule "Recommend post that is popular"
+when
+
+    $candidatePost : Post(
+        userId != feedRequest.user.id,
+        createdAt >= LocalDateTime.now().minusHours(24)
+    )
+
+    $likeCount : Number(intValue > 10) from accumulate(
+        Like(post == $candidatePost),
+        count(1)
+    )
+then
+    System.out.println("DA LI SI USAO ZA POPULARNON: " + $candidatePost.getId());
+    feedRequest.addScore($candidatePost, 10); 
+end
+
+rule "Recommend post that uses popular hashtag"
+when
+    $post : Post()
+
+    $h : Hashtag() from $post.hashtags
+
+    $postCount : Number(intValue > 5) from accumulate(
+        $p : Post(
+                createdAt >= LocalDateTime.now().minusHours(24),
+                hashtags contains $h
+            ),
+        count(1)
+    )
+
+    $candidatePost : Post(
+        userId != feedRequest.user.id,
+        hashtags contains $h
+    )
+then
+    feedRequest.addScore($candidatePost, 7); 
+end
+
+rule "Recommend post that uses popular hashtag which user liked"
+when
+    $like : Like(
+        userId == feedRequest.user.id,
+        $likedPost : post
+    )
+
+    $h : Hashtag() from $likedPost.hashtags
+
+    $postCount : Number(intValue > 5) from accumulate(
+        $p : Post(
+                createdAt >= LocalDateTime.now().minusHours(24),
+                hashtags contains $h
+            ),
+        count(1)
+    )
+
+    $candidatePost : Post(
+        userId != feedRequest.user.id,
+        hashtags contains $h,
+        this != $likedPost 
+    )
+then
+    feedRequest.addScore($candidatePost, 12); 
+    System.out.println("DA LI SI USAO ZA POSLEDNJI???: " + $candidatePost.getId());
+end

@@ -1,0 +1,36 @@
+package com.example.social_media.controller;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.dto.FriendRequestResponse;
+import com.example.social_media.entity.FriendRequest;
+import com.example.social_media.service.FriendRequestService;
+
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/request")
+@RequiredArgsConstructor
+public class FriendRequestController {
+    private final FriendRequestService service;
+
+    @PostMapping("/{receiverId}/sendFriendRequest")
+    public FriendRequest sendFriendRequest(@PathVariable Long receiverId){
+        return service.sendFriendRequest(receiverId);
+    }
+
+    @PostMapping("/{senderId}/acceptFriendRequest")
+    public FriendRequestResponse acceptFriendRequest(@PathVariable Long senderId){
+        FriendRequest request = service.acceptFriendRequest(senderId);
+
+        return new FriendRequestResponse(
+            request.getId(),
+            request.getSender().getId(),
+            request.getSender().getEmail(),
+            request.getReceiver().getId()
+        );
+    }
+}

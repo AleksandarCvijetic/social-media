@@ -4,6 +4,7 @@ package com.example.social_media.entity;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,7 +34,8 @@ public class UserInfo {
     private String surname;
     private String email;
     private String password;
-    private String address;
+    @Embedded
+    private Address address;
     private String roles;
 
     @ManyToMany
@@ -44,4 +46,13 @@ public class UserInfo {
     )
     @ToString.Exclude
     private Set<UserInfo> friends = new HashSet<>();
+
+    // UserInfo.java
+    public String getCity() {
+        return this.address.getCity(); // ili samo address ako je String
+    }
+
+    public Long getId() {
+        return this.id;
+    }
 }

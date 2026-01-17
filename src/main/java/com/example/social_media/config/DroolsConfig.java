@@ -13,19 +13,26 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DroolsConfig {
 
-    private static final String drlFile = "rules/feed-rules.drl";
-
     @Bean
     public KieContainer kieContainer() {
         KieServices kieServices = KieServices.Factory.get();
 
         KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
-        kieFileSystem.write(ResourceFactory.newClassPathResource(drlFile));
+
+        kieFileSystem.write(
+            ResourceFactory.newClassPathResource("rules/feed-rules.drl")
+        );
+        kieFileSystem.write(
+            ResourceFactory.newClassPathResource("rules/ads-rules.drl")
+        );
+
         KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
         kieBuilder.buildAll();
-        KieModule kieModule = kieBuilder.getKieModule();
 
-        return kieServices.newKieContainer(kieModule.getReleaseId());
+        return kieServices.newKieContainer(
+            kieBuilder.getKieModule().getReleaseId()
+        );
     }
 }
+
 

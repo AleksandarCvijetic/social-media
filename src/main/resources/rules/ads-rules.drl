@@ -1,0 +1,71 @@
+    package resources.rules
+
+    import com.example.social_media.entity.Like
+    import com.example.social_media.entity.Hashtag
+    import com.example.social_media.entity.Place
+    import com.example.social_media.entity.Review
+    import com.example.social_media.entity.UserInfo
+    import com.example.social_media.entity.Post
+
+    rule "DEBUG ads loaded"
+    when
+    then
+        System.out.println("ADS RULES LOADED");
+    end
+
+
+    query recommendPlace(UserInfo user, Place place)
+
+    Place(this == place)
+
+    (
+        isUserFromPlaceCity(user, place; )
+
+        or
+
+        (
+            userLikesPlaceType(user, likedPlace; )
+            and eval(place != likedPlace)
+            and eval(place.getName().equals(likedPlace.getName()))
+        )
+
+        or
+
+        (
+            userUsedHashtagInReview(user, h; )
+            and placeHasHashtag(place, h; )
+        )
+    )
+
+end
+
+
+
+    query userLikesPlaceType( UserInfo u, Place likedPlace)
+        Review(
+            user == u,
+            place == likedPlace,
+            grade >= 4
+        )
+    end
+
+    query isUserFromPlaceCity(UserInfo u, Place place)
+        Place(
+            this == place,
+            address.city == u.address.city
+        )
+    end
+
+    query userUsedHashtagInReview(UserInfo u, Hashtag h)
+        r : Review(
+            user == u
+        )
+
+        Hashtag(this == h) from r.hashtags
+    end
+
+    query placeHasHashtag(Place p, Hashtag h)
+        pl : Place(this == p)
+        Hashtag(this == h) from pl.hashtags
+    end
+    

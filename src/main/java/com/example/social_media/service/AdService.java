@@ -25,7 +25,7 @@ import com.example.social_media.repository.ReviewRepository;
 
 @Service
 public class AdService {
-    private KieContainer kieContainer;
+    private KieContainer adsKieContainer;
     private UserInfoService userInfoService;
     private PostRepository postRepository;
     private ReviewRepository reviewRepository;
@@ -34,7 +34,7 @@ public class AdService {
     private HashtagRepository hashtagRepository;
 
     public AdService(
-        KieContainer kieContainer,
+        KieContainer adsKieContainer,
         UserInfoService userInfoService,
         PostRepository postRepository,
         ReviewRepository reviewRepository,
@@ -42,7 +42,7 @@ public class AdService {
         LikeRepository likeRepository,
         HashtagRepository hashtagRepository
     ){
-        this.kieContainer = kieContainer;
+        this.adsKieContainer = adsKieContainer;
         this.userInfoService = userInfoService;
         this.postRepository = postRepository;
         this.reviewRepository = reviewRepository;
@@ -52,7 +52,7 @@ public class AdService {
     }
 
     public List<Place> getRecommendedAds(){
-        KieSession kieSession = kieContainer.newKieSession();
+        KieSession kieSession = adsKieContainer.newKieSession();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());

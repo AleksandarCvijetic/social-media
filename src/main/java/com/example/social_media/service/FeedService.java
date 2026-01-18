@@ -19,25 +19,25 @@ import com.example.social_media.repository.PostRepository;
 @Service
 public class FeedService {
 
-    private KieContainer kieContainer;
+    private KieContainer feedKieContainer;
     private PostRepository postRepository;
     private LikeRepository likeRepository;
     private UserInfoService userInfoService;
 
     public FeedService(
-        KieContainer kieContainer, 
+        KieContainer feedKieContainer, 
         PostRepository postRepository, 
         LikeRepository likeRepository, 
         UserInfoService userInfoService
     ){
-        this.kieContainer = kieContainer;
+        this.feedKieContainer = feedKieContainer;
         this.postRepository = postRepository;
         this.likeRepository = likeRepository;
         this.userInfoService = userInfoService;
     }
 
     public List<Post> getFeedPosts(){
-        KieSession kieSession = kieContainer.newKieSession();
+        KieSession kieSession = feedKieContainer.newKieSession();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());

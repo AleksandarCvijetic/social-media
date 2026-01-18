@@ -14,25 +14,25 @@ import org.springframework.context.annotation.Configuration;
 public class DroolsConfig {
 
     @Bean
-    public KieContainer kieContainer() {
+    public KieContainer feedKieContainer() {
         KieServices kieServices = KieServices.Factory.get();
-
-        KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
-
-        kieFileSystem.write(
-            ResourceFactory.newClassPathResource("rules/feed-rules.drl")
-        );
-        kieFileSystem.write(
-            ResourceFactory.newClassPathResource("rules/ads-rules.drl")
-        );
-
-        KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
+        KieFileSystem kfs = kieServices.newKieFileSystem();
+        kfs.write(ResourceFactory.newClassPathResource("rules/feed/feed-rules.drl"));
+        KieBuilder kieBuilder = kieServices.newKieBuilder(kfs);
         kieBuilder.buildAll();
+        return kieServices.newKieContainer(kieBuilder.getKieModule().getReleaseId());
+    }
 
-        return kieServices.newKieContainer(
-            kieBuilder.getKieModule().getReleaseId()
-        );
+    @Bean
+    public KieContainer adsKieContainer() {
+        KieServices kieServices = KieServices.Factory.get();
+        KieFileSystem kfs = kieServices.newKieFileSystem();
+        kfs.write(ResourceFactory.newClassPathResource("rules/ads/ads-rules.drl"));
+        KieBuilder kieBuilder = kieServices.newKieBuilder(kfs);
+        kieBuilder.buildAll();
+        return kieServices.newKieContainer(kieBuilder.getKieModule().getReleaseId());
     }
 }
+
 
 

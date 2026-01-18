@@ -1,4 +1,4 @@
-package resources.rules
+package resources.rules.feed
 
 import java.time.LocalDateTime;
 

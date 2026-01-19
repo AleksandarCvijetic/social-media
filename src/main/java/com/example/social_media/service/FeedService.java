@@ -2,6 +2,7 @@ package com.example.social_media.service;
 
 import java.util.List;
 
+import java.util.Map;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,20 +19,25 @@ import com.example.social_media.repository.PostRepository;
 @Service
 public class FeedService {
 
-    private KieContainer kieContainer;
+    private KieContainer feedKieContainer;
     private PostRepository postRepository;
     private LikeRepository likeRepository;
     private UserInfoService userInfoService;
 
-    public FeedService(KieContainer kieContainer, PostRepository postRepository, LikeRepository likeRepository, UserInfoService userInfoService){
-        this.kieContainer = kieContainer;
+    public FeedService(
+        KieContainer feedKieContainer, 
+        PostRepository postRepository, 
+        LikeRepository likeRepository, 
+        UserInfoService userInfoService
+    ){
+        this.feedKieContainer = feedKieContainer;
         this.postRepository = postRepository;
         this.likeRepository = likeRepository;
         this.userInfoService = userInfoService;
     }
 
     public List<Post> getFeedPosts(){
-        KieSession kieSession = kieContainer.newKieSession();
+        KieSession kieSession = feedKieContainer.newKieSession();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
@@ -39,6 +45,7 @@ public class FeedService {
         List<Like> allLikes = likeRepository.findAll();
 
         FeedRequest feedRequest = new FeedRequest(user, allPosts);
+
         kieSession.setGlobal("feedRequest", feedRequest);
 
         for(Post post : allPosts){
@@ -53,5 +60,13 @@ public class FeedService {
 
         return feedRequest.getRecommendedPosts();
     }
+
+    private boolean isNewUser(UserInfo user) {
+        boolean hasFriends = !user.getFriends().isEmpty();
+        boolean hasPosts = !postRepository.findAllByUserId(user.getId()).isEmpty();
+        return !hasFriends && !hasPosts;
+    }
+
+
 
 }

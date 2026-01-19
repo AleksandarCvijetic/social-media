@@ -1,0 +1,108 @@
+    package resources.rules.ads
+
+    import com.example.social_media.entity.Like
+    import com.example.social_media.entity.Hashtag
+    import com.example.social_media.entity.Place
+    import com.example.social_media.entity.Review
+    import com.example.social_media.entity.UserInfo
+    import com.example.social_media.entity.Post
+
+    rule "DEBUG ads loaded"
+    when
+    then
+        System.out.println("ADS RULES LOADED");
+    end
+
+
+    query recommendPlace(UserInfo user, Place place)
+
+        Place(this == place)
+
+        (
+            isUserFromPlaceCity(user, place; )
+
+            or userLikesSimillarPlace(user, place; )
+
+            or placeMatchesReviewHashtag(user, place; )
+
+            or placeMatchesLikedPostHashtag(user, place; )
+
+            or placeMatchesUserHashtagInPost(user, place; )
+        )
+
+    end
+
+    query userLikesSimillarPlace(UserInfo u, Place place)
+        userLikesPlaceType(u, likedPlace; )
+        Place(this == place, this != likedPlace, name == likedPlace.name)
+    end
+
+
+    query userLikesPlaceType( UserInfo u, Place likedPlace)
+        Review(
+            user == u,
+            place == likedPlace,
+            grade >= 4
+        )
+    end
+
+    query isUserFromPlaceCity(UserInfo u, Place place)
+        Place(
+            this == place,
+            address.city == u.address.city
+        )
+    end
+
+    query placeMatchesReviewHashtag(UserInfo u, Place place)
+        userUsedHashtagInReview(u, h; )
+        placeHasHashtag(place, h; )
+    end
+
+    query userUsedHashtagInReview(UserInfo u, Hashtag h)
+        r : Review(
+            user == u
+        )
+
+        Hashtag(this == h) from r.hashtags
+    end
+
+    query placeHasHashtag(Place p, Hashtag h)
+        pl : Place(this == p)
+        Hashtag(this == h) from pl.hashtags
+    end
+
+    query placeMatchesLikedPostHashtag(UserInfo u, Place place)
+        placeHasHashtagAsPost(place, h; )
+        userLikedHashtagMoreThan3(u, h; )
+    end
+
+    query placeMatchesUserHashtagInPost(UserInfo u, Place place)
+        placeHasHashtagAsPost(place, h; )   
+        userUsedHashtagInPost(u, h; )
+    end
+
+    query placeHasHashtagAsPost(Place place, Hashtag h)
+        p1 : Place(this == place)
+        Hashtag(this == h) from p1.hashtags
+
+    end
+
+    query userLikedHashtagMoreThan3(UserInfo u ,Hashtag h)
+        Number(intValue > 3) from accumulate (
+            Like(
+                p : post,
+                userId == u.id
+            )
+            and
+            Hashtag(this == h) from p.hashtags,
+            count(1)
+        )
+    end
+
+    query userUsedHashtagInPost(UserInfo u, Hashtag h)
+        p : Post(
+            userId == u.id
+        )
+        Hashtag(this == h) from p.hashtags
+    end
+    

@@ -1,9 +1,11 @@
 package com.example.social_media.entity;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,8 +30,8 @@ public class Place {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String name;
-    private String country;
-    private String city;
+    @Embedded
+    private Address address;
     private String description;
     
     @OneToMany(mappedBy = "place",cascade = CascadeType.ALL, orphanRemoval = true)
@@ -42,4 +44,5 @@ public class Place {
         inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
     private Set<Hashtag> hashtags = new HashSet<>();
+
 }

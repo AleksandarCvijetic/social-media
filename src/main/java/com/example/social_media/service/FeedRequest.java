@@ -14,7 +14,7 @@ public class FeedRequest {
     private UserInfo user;                // trenutno ulogovani korisnik
     private List<Post> allPosts;          // sve potencijalne objave koje se mogu preporučiti
     private Map<Post, Integer> postScores; // bodovanje po pravilima
-    
+
     public FeedRequest(UserInfo user, List<Post> allPosts) {
         this.user = user;
         this.allPosts = allPosts;
@@ -53,5 +53,6 @@ public class FeedRequest {
         // uzmi top 20
         return recommended.size() > 20 ? recommended.subList(0, 20) : recommended;
     }
+
 }
 

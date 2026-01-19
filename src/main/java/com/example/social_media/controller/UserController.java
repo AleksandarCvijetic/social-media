@@ -1,16 +1,20 @@
 package com.example.social_media.controller;
 
 
+import com.example.dto.UserInfoDto;
 import com.example.social_media.entity.AuthRequest;
 import com.example.social_media.entity.UserInfo;
 import com.example.social_media.service.JwtService;
 import com.example.social_media.service.UserInfoService;
+
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import lombok.RequiredArgsConstructor;
 
@@ -57,4 +61,14 @@ public class UserController {
             throw new UsernameNotFoundException("Invalid user request!");
         }
     }
+    
+    @GetMapping("/searchUsers")
+    public List<UserInfoDto> searchUsers(@RequestParam String keyword) {
+        // Dohvat trenutno prijavljenog korisnika
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo currentUser = service.findByEmail(auth.getName());
+
+        return service.searchUsers(keyword, currentUser);
+    }
+
 }

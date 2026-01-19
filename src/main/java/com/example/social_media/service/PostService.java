@@ -12,9 +12,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.dto.PostDto;
 import com.example.social_media.entity.Hashtag;
 import com.example.social_media.entity.Post;
 import com.example.social_media.entity.UserInfo;
+import com.example.social_media.mapper.PostMapper;
 import com.example.social_media.repository.HashtagRepository;
 import com.example.social_media.repository.PostRepository;
 
@@ -25,17 +27,22 @@ public class PostService {
     private final HashtagRepository hashtagRepository;
     private final UserInfoService userInfoService;
     private final LikeService likeService;
+    private final PostMapper postMapper;
 
     @Autowired
-    public PostService(PostRepository postRepository, UserInfoService userInfoService, HashtagRepository hashtagRepository, LikeService likeService){
+    public PostService(PostRepository postRepository, UserInfoService userInfoService, HashtagRepository hashtagRepository, LikeService likeService, PostMapper postMapper){
         this.postRepository = postRepository;
         this.userInfoService = userInfoService;
         this.hashtagRepository = hashtagRepository;
         this.likeService = likeService;
+        this.postMapper = postMapper;
     }
 
-    public List<Post> findAll(){
-        return postRepository.findAll();
+    public List<PostDto> findAll(){
+        return postRepository.findAll()
+            .stream()
+            .map(postMapper::toDto)
+            .collect(Collectors.toList());
     }
 
     public Post findById(int id){
@@ -72,19 +79,25 @@ public class PostService {
         return "Post created!"; 
     }
 
-    public List<Post> findMyPosts() {
+    public List<PostDto> findMyPosts() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
-        return postRepository.findAllByUserId(user.getId());
+        return postRepository.findAllByUserId(user.getId())
+                .stream()
+                .map(postMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public List<Post> findOtherPosts() {
+    public List<PostDto> findOtherPosts() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
-        return postRepository.findAllByUserIdNot(user.getId());
+        return postRepository.findAllByUserIdNot(user.getId())
+                .stream()
+                .map(postMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public List<Post> findFriendsPosts(){
+    public List<PostDto> findFriendsPosts(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
         
@@ -93,10 +106,13 @@ public class PostService {
             return List.of();
         }
 
-        return postRepository.findAllByUserIdIn(friendIds);
+        return postRepository.findAllByUserIdIn(friendIds)
+                .stream()
+                .map(postMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public List<Post> findFriendsPostsLastDay(){
+    public List<PostDto> findFriendsPostsLastDay(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
         
@@ -107,10 +123,13 @@ public class PostService {
 
         LocalDate oneDayAgo = LocalDate.now().minusDays(1);
 
-        return postRepository.findAllByUserIdInAndCreatedAtAfter(friendIds, oneDayAgo);
+        return postRepository.findAllByUserIdInAndCreatedAtAfter(friendIds, oneDayAgo)
+                .stream()
+                .map(postMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public List<Post> findNotFriendsPosts(){
+    public List<PostDto> findNotFriendsPosts(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
         
@@ -119,7 +138,10 @@ public class PostService {
             return List.of();
         }
 
-        return postRepository.findAllByUserIdNotIn(friendIds);
+        return postRepository.findAllByUserIdNotIn(friendIds)
+                .stream()
+                .map(postMapper::toDto)
+                .collect(Collectors.toList());
     }
 
 }

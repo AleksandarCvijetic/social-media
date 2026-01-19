@@ -1,7 +1,9 @@
 package com.example.social_media.service;
 
 
+import com.example.dto.UserInfoDto;
 import com.example.social_media.entity.UserInfo;
+import com.example.social_media.mapper.UserInfoMapper;
 import com.example.social_media.repository.UserInfoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,19 +12,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
-
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserInfoService implements UserDetailsService {
 
     private final UserInfoRepository repository;
     private final PasswordEncoder encoder;
+    private final UserInfoMapper userMapper;
 
     @Autowired
-    public UserInfoService(UserInfoRepository repository, PasswordEncoder encoder) {
+    public UserInfoService(UserInfoRepository repository, PasswordEncoder encoder, UserInfoMapper userMapper) {
         this.repository = repository;
         this.encoder = encoder;
+        this.userMapper = userMapper;
     }
 
     // Method to load user details by username (email)
@@ -40,6 +45,18 @@ public class UserInfoService implements UserDetailsService {
             return new UserInfoDetails(user);
     }
 
+    public List<UserInfoDto> searchUsers(String keyword, UserInfo currentUser) {
+        List<UserInfo> users = repository.findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCase(keyword, keyword);
+
+        // Filtriramo da ne uključimo trenutno prijavljenog korisnika i njegove prijatelje
+        users.removeIf(u -> u.getId().equals(currentUser.getId()) || currentUser.getFriends().contains(u));
+
+        return users
+                    .stream()
+                    .map(userMapper::toDto)
+                    .collect(Collectors.toList());
+    }
+
     public UserInfo findByEmail(String email) {
         return repository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -54,6 +71,7 @@ public class UserInfoService implements UserDetailsService {
     public String addUser(UserInfo userInfo) {
         // Encrypt password before saving
         userInfo.setPassword(encoder.encode(userInfo.getPassword())); 
+        userInfo.setRoles("ROLE_USER");
         repository.save(userInfo);
         return "User added successfully!";
     }

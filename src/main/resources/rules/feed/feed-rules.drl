@@ -23,11 +23,11 @@ end
 
 rule "Recommend post liked by similar users (Pearson)"
 when
-    feedRequest.newUser == true
+    eval( feedRequest.isNewUser() )
 
     $sim : UserSimilarity(
         userA == feedRequest.user.id,
-        isSimilar == true
+        correlation >= 0.5
     )
 
     $like : Like(

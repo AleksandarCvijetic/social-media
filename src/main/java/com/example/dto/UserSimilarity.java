@@ -15,11 +15,11 @@ public class UserSimilarity {
         return correlation >= 0.5;
     }
 
-    public Long getUserAId(){
+    public Long getUserA(){
         return userA;
     }
 
-    public Long getUserBId(){
+    public Long getUserB(){
         return userB;
     }
     public double getCorrelation(){

@@ -2,6 +2,7 @@ package resources.rules.feed
 
 import java.time.LocalDateTime;
 
+import com.example.dto.UserSimilarity
 import com.example.social_media.entity.Post
 import com.example.social_media.entity.Like
 import com.example.social_media.entity.Hashtag
@@ -18,6 +19,28 @@ when
     )
 then
     feedRequest.addScore($post, 0);
+end
+
+rule "Recommend post liked by similar users (Pearson)"
+when
+    feedRequest.newUser == true
+
+    $sim : UserSimilarity(
+        userA == feedRequest.user.id,
+        isSimilar == true
+    )
+
+    $like : Like(
+        userId == $sim.userB,
+        $likedPost : post
+    )
+
+    $candidatePost : Post(
+        this == $likedPost,
+        userId != feedRequest.user.id
+    )
+then
+    feedRequest.addScore($candidatePost, 1);
 end
 
 rule "Recommend post with hashtag liked by user"

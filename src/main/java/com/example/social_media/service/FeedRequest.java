@@ -14,11 +14,17 @@ public class FeedRequest {
     private UserInfo user;                // trenutno ulogovani korisnik
     private List<Post> allPosts;          // sve potencijalne objave koje se mogu preporučiti
     private Map<Post, Integer> postScores; // bodovanje po pravilima
+    private boolean newUser;
 
-    public FeedRequest(UserInfo user, List<Post> allPosts) {
+    public FeedRequest(UserInfo user, List<Post> allPosts, boolean newUser) {
         this.user = user;
         this.allPosts = allPosts;
         this.postScores = new HashMap<>();
+        this.newUser = newUser;
+    }
+
+    public boolean isNewUser(){
+        return newUser;
     }
 
     // GETTERS

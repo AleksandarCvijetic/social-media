@@ -44,7 +44,10 @@ public class FeedService {
         List<Post> allPosts = postRepository.findAllByUserIdNot(user.getId());
         List<Like> allLikes = likeRepository.findAll();
 
-        FeedRequest feedRequest = new FeedRequest(user, allPosts);
+        boolean isNewUser = postRepository.countByUserId(user.getId()) == 0
+                && user.getFriends().isEmpty();
+
+        FeedRequest feedRequest = new FeedRequest(user, allPosts, isNewUser);
 
         kieSession.setGlobal("feedRequest", feedRequest);
 

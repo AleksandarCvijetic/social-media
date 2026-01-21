@@ -24,6 +24,16 @@ public class DroolsConfig {
     }
 
     @Bean
+    public KieContainer newUserFeedKieContainer() {
+        KieServices kieServices = KieServices.Factory.get();
+        KieFileSystem kfs = kieServices.newKieFileSystem();
+        kfs.write(ResourceFactory.newClassPathResource("rules/new-user-feed/new_user_feed_rules.drl"));
+        KieBuilder kieBuilder = kieServices.newKieBuilder(kfs);
+        kieBuilder.buildAll();
+        return kieServices.newKieContainer(kieBuilder.getKieModule().getReleaseId());
+    }
+
+    @Bean
     public KieContainer adsKieContainer() {
         KieServices kieServices = KieServices.Factory.get();
         KieFileSystem kfs = kieServices.newKieFileSystem();

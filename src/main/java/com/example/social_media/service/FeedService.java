@@ -6,6 +6,7 @@ import java.util.List;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.dto.PostSimilarity;
 import com.example.dto.UserSimilarity;
 import com.example.social_media.entity.Like;
 import com.example.social_media.entity.Post;
@@ -25,6 +27,7 @@ import com.example.social_media.repository.PostRepository;
 public class FeedService {
 
     private KieContainer feedKieContainer;
+    private KieContainer newUserFeedKieContainer;
     private PostRepository postRepository;
     private LikeRepository likeRepository;
     private UserInfoService userInfoService;
@@ -33,16 +36,18 @@ public class FeedService {
         KieContainer feedKieContainer, 
         PostRepository postRepository, 
         LikeRepository likeRepository, 
-        UserInfoService userInfoService
+        UserInfoService userInfoService,
+        KieContainer newUserFeedKieContainer
     ){
         this.feedKieContainer = feedKieContainer;
         this.postRepository = postRepository;
         this.likeRepository = likeRepository;
         this.userInfoService = userInfoService;
+        this.newUserFeedKieContainer = newUserFeedKieContainer;
     }
 
     public List<Post> getFeedPosts(){
-        KieSession kieSession = feedKieContainer.newKieSession();
+        //KieSession kieSession = feedKieContainer.newKieSession();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
@@ -51,6 +56,8 @@ public class FeedService {
 
         boolean isNewUser = postRepository.countByUserId(user.getId()) == 0
                 && user.getFriends().isEmpty();
+        
+        KieSession kieSession = isNewUser ? newUserFeedKieContainer.newKieSession() : feedKieContainer.newKieSession();
         System.out.println("DA LI JE NOV KORISNIK" + isNewUser);
         FeedRequest feedRequest = new FeedRequest(user, allPosts, isNewUser);
 
@@ -70,7 +77,37 @@ public class FeedService {
                 .computeIfAbsent(like.getUserId(), k -> new HashSet<>())
                 .add(like.getPost().getId());
         }
+        Map<Long, Set<Long>> usersByLikedPost = new HashMap<>();
+        for (Like like : allLikes){
+            usersByLikedPost.computeIfAbsent(like.getPost().getId(), k -> new HashSet<>()).add(like.getUserId());
+        }
+        Set<Long> likedByUser = allLikes.stream()
+            .filter(l -> l.getUserId().equals(user.getId()))
+            .map(l -> l.getPost().getId())
+            .collect(Collectors.toSet());
 
+        if(isNewUser){
+            for (Long likedPostId : likedByUser) {
+            Set<Long> likersA = usersByLikedPost.getOrDefault(likedPostId, Set.of());
+            System.out.println(likersA);
+            for (Map.Entry<Long, Set<Long>> entry : usersByLikedPost.entrySet()) {
+                Long candidatePostId = entry.getKey();
+
+                if (likedByUser.contains(candidatePostId)) continue;
+
+                Set<Long> likersB = entry.getValue();
+                System.out.println(likersB);
+                double similarity = calculatePostSimilarity(likersA, likersB);
+                System.out.println("SIMILARITY: " + similarity);
+                if (similarity >= 0.7) {
+                    kieSession.insert(
+                        new PostSimilarity(likedPostId, candidatePostId, similarity)
+                    );
+                }
+            }
+        }
+
+        }
         if (isNewUser) {
             Set<Long> likesA = likesByUser.getOrDefault(user.getId(), Set.of());
 
@@ -148,6 +185,15 @@ public class FeedService {
         return numerator / Math.sqrt(denomA * denomU);
     }
 
+    private double calculatePostSimilarity(Set<Long> a, Set<Long> b) {
+        if (a.isEmpty() || b.isEmpty()) return 0.0;
+
+        Set<Long> intersection = new HashSet<>(a);
+        intersection.retainAll(b);
+
+        int minSize = Math.min(a.size(), b.size());
+        return (double) intersection.size() / minSize;
+    }
 
 
 }

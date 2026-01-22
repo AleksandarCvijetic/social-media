@@ -1,5 +1,6 @@
 package com.example.social_media.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ public class LikeService {
         }else{
             like.setPost(post);
             like.setUserId(user.getId());
+            like.setCreatedAt(LocalDateTime.now());
             likeRepository.save(like);
             return true; //liked
         }

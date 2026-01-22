@@ -3,15 +3,18 @@ package com.example.social_media.service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.dto.PlaceDto;
 import com.example.social_media.entity.Hashtag;
 import com.example.social_media.entity.Place;
 import com.example.social_media.entity.UserInfo;
+import com.example.social_media.mapper.PlaceMapper;
 import com.example.social_media.repository.HashtagRepository;
 import com.example.social_media.repository.PlaceRepository;
 
@@ -20,12 +23,14 @@ public class PlaceService {
     private final PlaceRepository placeRepository;
     private final UserInfoService userInfoService;
     private final HashtagRepository hashtagRepository;
+    private final PlaceMapper mapper;
 
     @Autowired
-    public PlaceService(PlaceRepository placeRepository, UserInfoService userInfoService, HashtagRepository hashtagRepository){
+    public PlaceService(PlaceRepository placeRepository, UserInfoService userInfoService, HashtagRepository hashtagRepository, PlaceMapper mapper){
         this.placeRepository = placeRepository;
         this.userInfoService = userInfoService;
         this.hashtagRepository = hashtagRepository;
+        this.mapper = mapper;
     }
 
     public UserInfo getCurrentUser(){
@@ -34,8 +39,11 @@ public class PlaceService {
         return user;
     }
 
-    public List<Place> findAll(){
-        return placeRepository.findAll();
+    public List<PlaceDto> findAll(){
+        return placeRepository.findAll()
+                .stream()
+                .map(mapper::toDto)  // Mapiramo svaki UserInfo u UserInfoDto
+                .collect(Collectors.toList());
     }
 
     public Place findById(int id){

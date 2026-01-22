@@ -1,5 +1,7 @@
 package com.example.social_media.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,4 +31,5 @@ public class Like {
     
     @Column(name = "user_id", nullable = false)
     private Long userId;
+    private LocalDateTime createdAt;
 }

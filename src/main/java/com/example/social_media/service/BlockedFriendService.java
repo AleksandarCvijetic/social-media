@@ -1,5 +1,7 @@
 package com.example.social_media.service;
 
+import java.util.List;
+
 import org.eclipse.jdt.internal.compiler.ast.Block;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -61,5 +63,14 @@ public class BlockedFriendService {
             repository.delete(blockedFriend);
             return blockedFriend;
         }
+    }
+
+    public List<Long> getBlockedFriendIds() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo blocker = userInfoService.findByEmail(auth.getName());
+        return repository.findByBlocker(blocker)
+                .stream()
+                .map(bf -> bf.getBlocked().getId())
+                .toList();
     }
 }

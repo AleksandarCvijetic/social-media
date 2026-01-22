@@ -1,0 +1,90 @@
+package resources.rules.new_user_feed
+
+import com.example.dto.UserSimilarity
+import com.example.dto.PostSimilarity
+import com.example.social_media.entity.Post
+import com.example.social_media.entity.Like
+import com.example.social_media.entity.Hashtag
+import com.example.social_media.service.FeedRequest
+
+import java.time.LocalDateTime;
+
+global FeedRequest feedRequest
+
+rule "Base score for all posts"
+salience 100
+when
+    $post : Post(
+        userId != feedRequest.user.id
+    )
+then
+    feedRequest.addScore($post, 0);
+end
+
+rule "Recommend post liked by similar users (Pearson)"
+when
+    eval( feedRequest.isNewUser() )
+
+    $sim : UserSimilarity(
+        userA == feedRequest.user.id,
+        correlation >= 0.5
+    )
+
+    $like : Like(
+        userId == $sim.userB,
+        $likedPost : post
+    )
+
+    $candidatePost : Post(
+        this == $likedPost,
+        userId != feedRequest.user.id
+    )
+then
+    feedRequest.addScore($candidatePost, 1);
+end
+
+rule "Recommend post similar to liked post"
+when
+    $sim : PostSimilarity(
+        similarity >= 0.7
+    )
+
+    $candidatePost : Post(
+        id == $sim.postB,
+        userId != feedRequest.user.id
+    )
+then
+    System.out.println("KOJI JE OVO POST: " + $candidatePost.getId());
+    feedRequest.addScore($candidatePost, 1);
+end
+
+rule "Recommend posts that interest user"
+when
+
+    $liked : Like(
+        userId == feedRequest.user.id,
+        $lp : post
+    )
+
+    $h : Hashtag() from $lp.hashtags
+
+    Number(intValue >= 3) from accumulate(
+        Like(
+            userId == feedRequest.user.id,
+            $p : post,
+            createdAt >= LocalDateTime.now().minusDays(3)
+        )
+        and
+        Hashtag(this == $h) from $p.hashtags,
+        count(1)
+    )
+
+    $candidate : Post(
+        userId != feedRequest.user.id,
+        hashtags contains $h,
+        this != $lp
+    )
+then
+    feedRequest.addScore($candidate, 1);
+end
+

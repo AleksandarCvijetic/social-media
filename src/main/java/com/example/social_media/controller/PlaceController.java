@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.dto.PlaceDto;
 import com.example.social_media.entity.Place;
 import com.example.social_media.service.PlaceService;
 
@@ -25,7 +26,7 @@ public class PlaceController {
     }
 
     @GetMapping("/getAllPlaces")
-    public List<Place> getAllPlaces(){
+    public List<PlaceDto> getAllPlaces(){
         return placeService.findAll();
     }
 }

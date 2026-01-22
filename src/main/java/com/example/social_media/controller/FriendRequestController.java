@@ -1,11 +1,17 @@
 package com.example.social_media.controller;
 
+import java.util.List;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.dto.FriendRequestDto;
 import com.example.dto.FriendRequestResponse;
+import com.example.dto.UserInfoDto;
 import com.example.social_media.entity.FriendRequest;
 import com.example.social_media.service.FriendRequestService;
 
@@ -32,5 +38,15 @@ public class FriendRequestController {
             request.getSender().getEmail(),
             request.getReceiver().getId()
         );
+    }
+
+    @GetMapping("/myRequests")
+    public List<FriendRequestDto> getMyRequests() {
+        return service.getPendingRequestsForUser();
+    }
+
+    @GetMapping("/myFriends")
+    public List<UserInfoDto> getMyFriends() {
+        return service.getAllFriends();
     }
 }

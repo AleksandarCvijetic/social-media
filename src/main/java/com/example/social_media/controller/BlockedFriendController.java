@@ -1,5 +1,8 @@
 package com.example.social_media.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,5 +27,10 @@ public class BlockedFriendController {
     @PostMapping("/{blockedId}/unblock")
     public BlockedFriend unblockFriend(@PathVariable Long blockedId){
         return service.unblockFriend(blockedId);
+    }
+
+    @GetMapping("/blocked")
+    public List<Long> getBlockedFriends() {
+        return service.getBlockedFriendIds();
     }
 }

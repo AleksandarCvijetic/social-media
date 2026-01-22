@@ -14,11 +14,17 @@ public class FeedRequest {
     private UserInfo user;                // trenutno ulogovani korisnik
     private List<Post> allPosts;          // sve potencijalne objave koje se mogu preporučiti
     private Map<Post, Integer> postScores; // bodovanje po pravilima
+    private boolean newUser;
 
-    public FeedRequest(UserInfo user, List<Post> allPosts) {
+    public FeedRequest(UserInfo user, List<Post> allPosts, boolean newUser) {
         this.user = user;
         this.allPosts = allPosts;
         this.postScores = new HashMap<>();
+        this.newUser = newUser;
+    }
+
+    public boolean isNewUser(){
+        return newUser;
     }
 
     // GETTERS
@@ -48,7 +54,8 @@ public class FeedRequest {
         recommended.sort((p1, p2) -> {
             int scoreCompare = postScores.get(p2).compareTo(postScores.get(p1));
             if(scoreCompare != 0) return scoreCompare;
-            return p2.getCreatedAt().compareTo(p1.getCreatedAt()); // novije idu prve
+            return p2.getCreatedAt().compareTo(p1.getCreatedAt())
+            ; // novije idu prve
         });
         // uzmi top 20
         return recommended.size() > 20 ? recommended.subList(0, 20) : recommended;

@@ -36,7 +36,7 @@ when
     )
     Hashtag( name == $h.name) from $candidatePost.hashtags
 then
-    feedRequest.addScore($candidatePost, 5);
+    feedRequest.addScore($candidatePost, 1);
 end
 
 rule "Recommend post with hashtag created by user"
@@ -54,7 +54,7 @@ when
 
 then
     System.out.println("CREATED HASHTAG MATCH: " + $candidatePost.getId());
-    feedRequest.addScore($candidatePost, 3);
+    feedRequest.addScore($candidatePost, 1);
 end
 
 rule "Recommend post that is popular"
@@ -71,7 +71,7 @@ when
     )
 then
     System.out.println("DA LI SI USAO ZA POPULARNON: " + $candidatePost.getId());
-    feedRequest.addScore($candidatePost, 10); 
+    feedRequest.addScore($candidatePost, 1); 
 end
 
 rule "Recommend post that uses popular hashtag"
@@ -93,7 +93,7 @@ when
         hashtags contains $h
     )
 then
-    feedRequest.addScore($candidatePost, 7); 
+    feedRequest.addScore($candidatePost, 1); 
 end
 
 rule "Recommend post that uses popular hashtag which user liked"
@@ -119,6 +119,6 @@ when
         this != $likedPost 
     )
 then
-    feedRequest.addScore($candidatePost, 12); 
+    feedRequest.addScore($candidatePost, 1); 
     System.out.println("DA LI SI USAO ZA POSLEDNJI???: " + $candidatePost.getId());
 end

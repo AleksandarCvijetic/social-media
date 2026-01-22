@@ -7,6 +7,8 @@ import com.example.social_media.entity.Like
 import com.example.social_media.entity.Hashtag
 import com.example.social_media.service.FeedRequest
 
+import java.time.LocalDateTime;
+
 global FeedRequest feedRequest
 
 rule "Base score for all posts"
@@ -58,10 +60,9 @@ end
 
 rule "Recommend posts that interest user"
 when
-    $u : UserInfo(this == feedRequest.user)
 
     $liked : Like(
-        userId == $u.id,
+        userId == feedRequest.user.id,
         $lp : post
     )
 
@@ -69,7 +70,7 @@ when
 
     Number(intValue >= 3) from accumulate(
         Like(
-            userId == $u.id,
+            userId == feedRequest.user.id,
             $p : post,
             createdAt >= LocalDateTime.now().minusDays(3)
         )
@@ -79,7 +80,7 @@ when
     )
 
     $candidate : Post(
-        userId != $u.id,
+        userId != feedRequest.user.id,
         hashtags contains $h,
         this != $lp
     )

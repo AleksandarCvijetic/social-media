@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.dto.PostDto;
 import com.example.dto.PostSimilarity;
 import com.example.dto.UserSimilarity;
 import com.example.social_media.entity.Like;
@@ -22,6 +23,7 @@ import com.example.social_media.entity.Post;
 import com.example.social_media.entity.UserInfo;
 import com.example.social_media.repository.LikeRepository;
 import com.example.social_media.repository.PostRepository;
+import com.example.social_media.mapper.PostMapper;
 
 @Service
 public class FeedService {
@@ -31,22 +33,25 @@ public class FeedService {
     private PostRepository postRepository;
     private LikeRepository likeRepository;
     private UserInfoService userInfoService;
+    private PostMapper mapper;
 
     public FeedService(
         KieContainer feedKieContainer, 
         PostRepository postRepository, 
         LikeRepository likeRepository, 
         UserInfoService userInfoService,
-        KieContainer newUserFeedKieContainer
+        KieContainer newUserFeedKieContainer,
+        PostMapper mapper
     ){
         this.feedKieContainer = feedKieContainer;
         this.postRepository = postRepository;
         this.likeRepository = likeRepository;
         this.userInfoService = userInfoService;
         this.newUserFeedKieContainer = newUserFeedKieContainer;
+        this.mapper = mapper;
     }
 
-    public List<Post> getFeedPosts(){
+    public List<PostDto> getFeedPosts(){
         //KieSession kieSession = feedKieContainer.newKieSession();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -131,7 +136,10 @@ public class FeedService {
         kieSession.fireAllRules();
         kieSession.dispose();
 
-        return feedRequest.getRecommendedPosts();
+        return feedRequest.getRecommendedPosts()
+                .stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
     }
 
     private boolean isNewUser(UserInfo user) {

@@ -1,5 +1,6 @@
 package com.example.social_media.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,9 +57,30 @@ public class FeedService {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
-        List<Post> allPosts = postRepository.findAllByUserIdNot(user.getId());
-        List<Like> allLikes = likeRepository.findAll();
+        List<Long> friendIds = new ArrayList<>(
+            user.getFriends()
+                .stream()
+                .map(UserInfo::getId)
+                .toList()
+        );
+        List<Post> myPosts = postRepository.findAllByUserId(user.getId());
+        List<Post> allPosts = new ArrayList<>();
 
+
+        if(friendIds.isEmpty()){
+            allPosts = postRepository.findAllByUserIdNot(user.getId());
+        }else{
+            //friendIds.add(user.getId());
+            allPosts = postRepository.findAllByUserIdNotIn(friendIds);
+        }
+        if (allPosts.isEmpty()) {
+            return List.of(); // prazan feed, 200 OK
+        }
+        /*allPosts = allPosts.stream()
+            .filter(p -> !likedPostIds.contains(p.getId()))
+            .toList();*/
+        
+        List<Like> allLikes = likeRepository.findAll();
         boolean isNewUser = postRepository.countByUserId(user.getId()) == 0
                 && user.getFriends().isEmpty();
         
@@ -69,6 +91,9 @@ public class FeedService {
         kieSession.setGlobal("feedRequest", feedRequest);
 
         for(Post post : allPosts){
+            kieSession.insert(post);
+        }
+        for (Post post : myPosts) {
             kieSession.insert(post);
         }
         for(Like like : allLikes){
@@ -135,9 +160,15 @@ public class FeedService {
 
         kieSession.fireAllRules();
         kieSession.dispose();
+        List<Long> likedPostIds = likeRepository
+            .findAllByUserId(user.getId())
+            .stream()
+            .map(like -> like.getPost().getId())
+            .toList();
 
         return feedRequest.getRecommendedPosts()
                 .stream()
+                .filter(post -> !likedPostIds.contains(post.getId()))
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }

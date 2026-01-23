@@ -36,6 +36,7 @@ when
     )
     Hashtag( name == $h.name) from $candidatePost.hashtags
 then
+    System.out.println("Nasao je lajkovani hesteg: " + $candidatePost.getId());
     feedRequest.addScore($candidatePost, 1);
 end
 
@@ -76,49 +77,24 @@ end
 
 rule "Recommend post that uses popular hashtag"
 when
-    $post : Post()
+    $candidatePost : Post(
+        userId != feedRequest.user.id
+    )
 
-    $h : Hashtag() from $post.hashtags
+    exists (
+        $h : Hashtag() from $candidatePost.hashtags
 
-    $postCount : Number(intValue > 5) from accumulate(
-        $p : Post(
+        and Number(intValue > 5) from accumulate(
+            Post(
                 createdAt >= LocalDateTime.now().minusHours(24),
                 hashtags contains $h
             ),
-        count(1)
-    )
-
-    $candidatePost : Post(
-        userId != feedRequest.user.id,
-        hashtags contains $h
+            count(1)
+        )
     )
 then
-    feedRequest.addScore($candidatePost, 1); 
+    System.out.println("POPULAR HASHTAG MATCH: " + $candidatePost.getId());
+    feedRequest.addScore($candidatePost, 1);
 end
 
-rule "Recommend post that uses popular hashtag which user liked"
-when
-    $like : Like(
-        userId == feedRequest.user.id,
-        $likedPost : post
-    )
 
-    $h : Hashtag() from $likedPost.hashtags
-
-    $postCount : Number(intValue > 5) from accumulate(
-        $p : Post(
-                createdAt >= LocalDateTime.now().minusHours(24),
-                hashtags contains $h
-            ),
-        count(1)
-    )
-
-    $candidatePost : Post(
-        userId != feedRequest.user.id,
-        hashtags contains $h,
-        this != $likedPost 
-    )
-then
-    feedRequest.addScore($candidatePost, 1); 
-    System.out.println("DA LI SI USAO ZA POSLEDNJI???: " + $candidatePost.getId());
-end

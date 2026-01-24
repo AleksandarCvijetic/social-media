@@ -129,11 +129,11 @@ public class FeedService {
                 System.out.println(likersB);
                 double similarity = calculatePostSimilarity(likersA, likersB);
                 System.out.println("SIMILARITY: " + similarity);
-                if (similarity >= 0.7) {
+                //if (similarity >= 0.7) {
                     kieSession.insert(
                         new PostSimilarity(likedPostId, candidatePostId, similarity)
                     );
-                }
+                //}
             }
         }
 
@@ -226,12 +226,12 @@ public class FeedService {
 
     private double calculatePostSimilarity(Set<Long> a, Set<Long> b) {
         if (a.isEmpty() || b.isEmpty()) return 0.0;
-
+        if (b.size() < 2) return 0.0;
         Set<Long> intersection = new HashSet<>(a);
         intersection.retainAll(b);
 
-        int minSize = Math.min(a.size(), b.size());
-        return (double) intersection.size() / minSize;
+        //int minSize = Math.min(a.size(), b.size());
+        return (double) intersection.size() / a.size();
     }
 
 

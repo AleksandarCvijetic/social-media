@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.dto.PlaceScore;
 import com.example.social_media.entity.Hashtag;
 import com.example.social_media.entity.Like;
 import com.example.social_media.entity.Place;
@@ -59,6 +60,7 @@ public class AdService {
 
         for (Place p : placeRepository.findAll()) {
             kieSession.insert(p);
+            kieSession.insert(new PlaceScore(p));
         }
         for (Review r : reviewRepository.findAll()) {
             kieSession.insert(r);

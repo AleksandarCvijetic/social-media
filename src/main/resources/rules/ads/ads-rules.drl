@@ -17,6 +17,7 @@
     query recommendPlace(UserInfo user, Place place)
 
         Place(this == place)
+        not userAlreadyReviewedPlace(user, place; )
 
         (
             isUserFromPlaceCity(user, place; )
@@ -31,6 +32,14 @@
         )
 
     end
+
+    query userAlreadyReviewedPlace(UserInfo u, Place p)
+        Review(
+            user == u,
+            place == p
+        )
+    end
+
 
     query userLikesSimillarPlace(UserInfo u, Place place)
         userLikesPlaceType(u, likedPlace; )

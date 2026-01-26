@@ -35,6 +35,7 @@ public class FeedService {
     private LikeRepository likeRepository;
     private UserInfoService userInfoService;
     private PostMapper mapper;
+    private PostService postService;
 
     public FeedService(
         KieContainer feedKieContainer, 
@@ -42,7 +43,8 @@ public class FeedService {
         LikeRepository likeRepository, 
         UserInfoService userInfoService,
         KieContainer newUserFeedKieContainer,
-        PostMapper mapper
+        PostMapper mapper,
+        PostService postService
     ){
         this.feedKieContainer = feedKieContainer;
         this.postRepository = postRepository;
@@ -50,6 +52,7 @@ public class FeedService {
         this.userInfoService = userInfoService;
         this.newUserFeedKieContainer = newUserFeedKieContainer;
         this.mapper = mapper;
+        this.postService = postService;
     }
 
     public List<PostDto> getFeedPosts(){
@@ -68,18 +71,14 @@ public class FeedService {
 
 
         if(friendIds.isEmpty()){
-            allPosts = postRepository.findAllByUserIdNot(user.getId());
+            allPosts = postService.findAllByUserIdNot(user.getId());
         }else{
-            //friendIds.add(user.getId());
-            allPosts = postRepository.findAllByUserIdNotIn(friendIds);
+            allPosts = postService.findAllByUserIdNotIn(friendIds);
         }
         if (allPosts.isEmpty()) {
             return List.of(); // prazan feed, 200 OK
         }
-        /*allPosts = allPosts.stream()
-            .filter(p -> !likedPostIds.contains(p.getId()))
-            .toList();*/
-        
+
         List<Like> allLikes = likeRepository.findAll();
         boolean isNewUser = postRepository.countByUserId(user.getId()) == 0
                 && user.getFriends().isEmpty();

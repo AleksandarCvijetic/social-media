@@ -18,7 +18,8 @@ public class PostMapper {
         PostDto dto = new PostDto();
         dto.setId(post.getId());
         dto.setText(post.getText());
-        dto.setUserId(post.getUserId());
+        dto.setUserName(post.getUser().getName());
+        dto.setUserSurname(post.getUser().getSurname());
         dto.setCreatedAt(post.getCreatedAt());
 
         Set<String> hashtagNames = post.getHashtags()

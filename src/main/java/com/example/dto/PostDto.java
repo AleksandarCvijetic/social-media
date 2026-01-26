@@ -13,7 +13,8 @@ import lombok.NoArgsConstructor;
 public class PostDto {
     private Long id;
     private String text;
-    private Long userId;
+    private String userName;
+    private String userSurname;
     private LocalDateTime createdAt;
     private Set<String> hashtags;
 }

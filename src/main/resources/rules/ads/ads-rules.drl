@@ -93,7 +93,7 @@
 
     query userUsedHashtagInPost(UserInfo u, Hashtag h)
         p : Post(
-            userId == u.id
+            user.id == u.id
         )
         Hashtag(this == h) from p.hashtags
     end

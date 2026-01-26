@@ -28,14 +28,16 @@ public class PostService {
     private final UserInfoService userInfoService;
     private final LikeService likeService;
     private final PostMapper postMapper;
+    private final BlockedFriendService blockedFriendService;
 
     @Autowired
-    public PostService(PostRepository postRepository, UserInfoService userInfoService, HashtagRepository hashtagRepository, LikeService likeService, PostMapper postMapper){
+    public PostService(PostRepository postRepository, UserInfoService userInfoService, HashtagRepository hashtagRepository, LikeService likeService, PostMapper postMapper, BlockedFriendService blockedFriendService){
         this.postRepository = postRepository;
         this.userInfoService = userInfoService;
         this.hashtagRepository = hashtagRepository;
         this.likeService = likeService;
         this.postMapper = postMapper;
+        this.blockedFriendService = blockedFriendService;
     }
 
     public List<PostDto> findAll(){
@@ -58,7 +60,7 @@ public class PostService {
         UserInfo user = userInfoService.findByEmail(userEmail);
         System.out.println("Debug: trenutno korisnik je " + user.getId());
 
-        post.setUserId(user.getId());
+        post.setUser(user);
         post.setCreatedAt(LocalDateTime.now());
 
         Set<Hashtag> resolvedHashtags = new HashSet<>();
@@ -91,9 +93,27 @@ public class PostService {
     public List<PostDto> findOtherPosts() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
+        List<Long> blockedIds = blockedFriendService.getBlockedFriendIds();
         return postRepository.findAllByUserIdNot(user.getId())
                 .stream()
+                .filter(post -> !blockedIds.contains(post.getUser().getId()))
                 .map(postMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<Post> findAllByUserIdNot(Long userId){
+        List<Long> blockedIds = blockedFriendService.getBlockedFriendIds();
+        return postRepository.findAllByUserIdNot(userId)
+                .stream()
+                .filter(post -> !blockedIds.contains(post.getUser().getId()))
+                .collect(Collectors.toList());
+    }
+
+    public List<Post> findAllByUserIdNotIn(List<Long> friendIds){
+        List<Long> blockedIds = blockedFriendService.getBlockedFriendIds();
+        return postRepository.findAllByUserIdNotIn(friendIds)
+                .stream()
+                .filter(post -> !blockedIds.contains(post.getUser().getId()))
                 .collect(Collectors.toList());
     }
 
@@ -121,7 +141,7 @@ public class PostService {
             return List.of();
         }
 
-        LocalDate oneDayAgo = LocalDate.now().minusDays(1);
+        LocalDateTime oneDayAgo = LocalDateTime.now().minusDays(1);
 
         return postRepository.findAllByUserIdInAndCreatedAtAfter(friendIds, oneDayAgo)
                 .stream()

@@ -14,7 +14,7 @@ rule "Base score for all posts"
 salience 100
 when
     $post : Post(
-        userId != feedRequest.user.id
+        user.id != feedRequest.user.id
     )
 then
     feedRequest.addScore($post, 0);
@@ -31,7 +31,7 @@ when
     $h : Hashtag() from $likedPost.hashtags
 
     $candidatePost : Post(
-        userId != feedRequest.user.id,
+        user.id != feedRequest.user.id,
         this != $likedPost 
     )
     Hashtag( name == $h.name) from $candidatePost.hashtags
@@ -43,13 +43,13 @@ end
 rule "Recommend post with hashtag created by user"
 when
     $candidatePost : Post(
-        userId != feedRequest.user.id
+        user.id != feedRequest.user.id
     )
 
     $h : Hashtag() from $candidatePost.hashtags
 
     $myPost : Post(
-        userId == feedRequest.user.id
+        user.id == feedRequest.user.id
     )
     Hashtag( name == $h.name ) from $myPost.hashtags
 
@@ -62,7 +62,7 @@ rule "Recommend post that is popular"
 when
 
     $candidatePost : Post(
-        userId != feedRequest.user.id,
+        user.id != feedRequest.user.id,
         createdAt >= LocalDateTime.now().minusHours(24)
     )
 
@@ -78,7 +78,7 @@ end
 rule "Recommend post that uses popular hashtag"
 when
     $candidatePost : Post(
-        userId != feedRequest.user.id
+        user.id != feedRequest.user.id
     )
 
     exists (

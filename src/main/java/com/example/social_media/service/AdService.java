@@ -1,7 +1,9 @@
 package com.example.social_media.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
@@ -75,19 +77,38 @@ public class AdService {
             kieSession.insert(p);
         }
         kieSession.insert(user);
-
+        Map<Place, Integer> scores = new HashMap<>();
         List<Place> result = new ArrayList<>();
         for(Place place : placeRepository.findAll()){
-            QueryResults qr = kieSession.getQueryResults(
-                "recommendPlace", user, place);
-
-            for (QueryResultsRow row : qr) {
-                Place p = (Place) row.get("place");
-                result.add(p);
+             // ne preporucuj vec review-ovana mesta
+            if (queryCount(kieSession, "userAlreadyReviewedPlace", user, place) > 0) {
+                continue;
             }
-        }
+
+            int score = 0;
+
+            score += queryCount(kieSession, "isUserFromPlaceCity", user, place);
+            score += queryCount(kieSession, "userLikesSimillarPlace", user, place);
+            score += queryCount(kieSession, "placeMatchesReviewHashtag", user, place);
+            score += queryCount(kieSession, "placeMatchesLikedPostHashtag", user, place);
+            score += queryCount(kieSession, "placeMatchesUserHashtagInPost", user, place);
+
+            if (score > 0) {
+                scores.put(place, score);
+            }
+            }
 
         kieSession.dispose();
-        return result;
+        System.out.println(scores);
+        return scores.entrySet()
+            .stream()
+            .sorted(Map.Entry.<Place, Integer>comparingByValue().reversed())
+            .map(Map.Entry::getKey)
+            .toList();
     }
+
+    private int queryCount(KieSession kieSession, String queryName, Object... args) {
+        return kieSession.getQueryResults(queryName, args).size();
+    }
+
 }

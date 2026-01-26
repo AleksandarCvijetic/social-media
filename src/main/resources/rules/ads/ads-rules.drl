@@ -14,24 +14,7 @@
     end
 
 
-    query recommendPlace(UserInfo user, Place place)
 
-        Place(this == place)
-        not userAlreadyReviewedPlace(user, place; )
-
-        (
-            isUserFromPlaceCity(user, place; )
-
-            or userLikesSimillarPlace(user, place; )
-
-            or placeMatchesReviewHashtag(user, place; )
-
-            or placeMatchesLikedPostHashtag(user, place; )
-
-            or placeMatchesUserHashtagInPost(user, place; )
-        )
-
-    end
 
     query userAlreadyReviewedPlace(UserInfo u, Place p)
         Review(

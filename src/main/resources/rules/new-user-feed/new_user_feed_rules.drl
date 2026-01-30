@@ -15,7 +15,7 @@ rule "Base score for all posts"
 salience 100
 when
     $post : Post(
-        userId != feedRequest.user.id
+        user.id != feedRequest.user.id
     )
 then
     feedRequest.addScore($post, 0);
@@ -37,7 +37,7 @@ when
 
     $candidatePost : Post(
         this == $likedPost,
-        userId != feedRequest.user.id
+        user.id != feedRequest.user.id
     )
 then
     feedRequest.addScore($candidatePost, 1);
@@ -51,7 +51,7 @@ when
 
     $candidatePost : Post(
         id == $sim.postB,
-        userId != feedRequest.user.id
+        user.id != feedRequest.user.id
     )
 then
     System.out.println("KOJI JE OVO POST: " + $candidatePost.getId());
@@ -80,7 +80,7 @@ when
     )
 
     $candidate : Post(
-        userId != feedRequest.user.id,
+        user.id != feedRequest.user.id,
         hashtags contains $h,
         this != $lp
     )

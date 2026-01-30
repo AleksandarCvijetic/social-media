@@ -34,7 +34,7 @@ public class PostReportService {
         Post post = postService.findById(postId);
         UserInfo reporter = getCurrentUser();
 
-        if(post.getUserId().equals(reporter.getId())){
+        if(post.getUser().getId().equals(reporter.getId())){
             throw new IllegalStateException("You cannot report your own post");
         }
         if(postReportRepository.existsByReportedPostAndReporter(post, reporter)){

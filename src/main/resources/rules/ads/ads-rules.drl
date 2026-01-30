@@ -14,23 +14,15 @@
     end
 
 
-    query recommendPlace(UserInfo user, Place place)
 
-        Place(this == place)
 
-        (
-            isUserFromPlaceCity(user, place; )
-
-            or userLikesSimillarPlace(user, place; )
-
-            or placeMatchesReviewHashtag(user, place; )
-
-            or placeMatchesLikedPostHashtag(user, place; )
-
-            or placeMatchesUserHashtagInPost(user, place; )
+    query userAlreadyReviewedPlace(UserInfo u, Place p)
+        Review(
+            user == u,
+            place == p
         )
-
     end
+
 
     query userLikesSimillarPlace(UserInfo u, Place place)
         userLikesPlaceType(u, likedPlace; )
@@ -101,7 +93,7 @@
 
     query userUsedHashtagInPost(UserInfo u, Hashtag h)
         p : Post(
-            userId == u.id
+            user.id == u.id
         )
         Hashtag(this == h) from p.hashtags
     end

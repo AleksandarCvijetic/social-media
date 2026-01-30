@@ -1,5 +1,6 @@
 package com.example.social_media.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,7 @@ public class FeedService {
     private LikeRepository likeRepository;
     private UserInfoService userInfoService;
     private PostMapper mapper;
+    private PostService postService;
 
     public FeedService(
         KieContainer feedKieContainer, 
@@ -41,7 +43,8 @@ public class FeedService {
         LikeRepository likeRepository, 
         UserInfoService userInfoService,
         KieContainer newUserFeedKieContainer,
-        PostMapper mapper
+        PostMapper mapper,
+        PostService postService
     ){
         this.feedKieContainer = feedKieContainer;
         this.postRepository = postRepository;
@@ -49,6 +52,7 @@ public class FeedService {
         this.userInfoService = userInfoService;
         this.newUserFeedKieContainer = newUserFeedKieContainer;
         this.mapper = mapper;
+        this.postService = postService;
     }
 
     public List<PostDto> getFeedPosts(){
@@ -56,9 +60,26 @@ public class FeedService {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo user = userInfoService.findByEmail(auth.getName());
-        List<Post> allPosts = postRepository.findAllByUserIdNot(user.getId());
-        List<Like> allLikes = likeRepository.findAll();
+        List<Long> friendIds = new ArrayList<>(
+            user.getFriends()
+                .stream()
+                .map(UserInfo::getId)
+                .toList()
+        );
+        List<Post> myPosts = postRepository.findAllByUserId(user.getId());
+        List<Post> allPosts = new ArrayList<>();
 
+
+        if(friendIds.isEmpty()){
+            allPosts = postService.findAllByUserIdNot(user.getId());
+        }else{
+            allPosts = postService.findAllByUserIdNotIn(friendIds);
+        }
+        if (allPosts.isEmpty()) {
+            return List.of(); // prazan feed, 200 OK
+        }
+
+        List<Like> allLikes = likeRepository.findAll();
         boolean isNewUser = postRepository.countByUserId(user.getId()) == 0
                 && user.getFriends().isEmpty();
         
@@ -69,6 +90,9 @@ public class FeedService {
         kieSession.setGlobal("feedRequest", feedRequest);
 
         for(Post post : allPosts){
+            kieSession.insert(post);
+        }
+        for (Post post : myPosts) {
             kieSession.insert(post);
         }
         for(Like like : allLikes){
@@ -104,11 +128,11 @@ public class FeedService {
                 System.out.println(likersB);
                 double similarity = calculatePostSimilarity(likersA, likersB);
                 System.out.println("SIMILARITY: " + similarity);
-                if (similarity >= 0.7) {
+                //if (similarity >= 0.7) {
                     kieSession.insert(
                         new PostSimilarity(likedPostId, candidatePostId, similarity)
                     );
-                }
+                //}
             }
         }
 
@@ -123,46 +147,46 @@ public class FeedService {
 
                 Set<Long> likesU = entry.getValue();
 
-                double pearson = calculatePearson(likesA, likesU);
+                double pearson = calculatePearson(likesA, likesU, allPosts);
                 System.out.println("KOLIKI JE PEARSON:  " + pearson);
-                if (pearson >= 0.5) {
+                //if (pearson >= 0.5) {
                     kieSession.insert(
                         new UserSimilarity(user.getId(), userU, pearson)
                     );
-                }
+                //}
             }
         }
 
         kieSession.fireAllRules();
         kieSession.dispose();
+        List<Long> likedPostIds = likeRepository
+            .findAllByUserId(user.getId())
+            .stream()
+            .map(like -> like.getPost().getId())
+            .toList();
 
         return feedRequest.getRecommendedPosts()
                 .stream()
+                .filter(post -> !likedPostIds.contains(post.getId()))
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    private boolean isNewUser(UserInfo user) {
-        boolean hasFriends = !user.getFriends().isEmpty();
-        boolean hasPosts = !postRepository.findAllByUserId(user.getId()).isEmpty();
-        return !hasFriends && !hasPosts;
-    }
-
-    private double calculatePearson(Set<Long> likesA, Set<Long> likesU) {
+    private double calculatePearson(Set<Long> likesA, Set<Long> likesU, List<Post> allPosts) {
         System.out.println(likesA);
         System.out.println(likesU);
-        // skup objava = unija lajkova
-        Set<Long> allPosts = new HashSet<>();
-        allPosts.addAll(likesA);
-        allPosts.addAll(likesU);
 
-        int n = allPosts.size();
+        List<Long> allPostsIds = allPosts.stream()
+            .map(Post::getId)
+            .collect(Collectors.toList());
+
+        int n = allPostsIds.size();
         if (n < 2) return 0.0;
         System.out.println("N JE: " + n);
         double sumA = 0;
         double sumU = 0;
 
-        for (Long postId : allPosts) {
+        for (Long postId : allPostsIds) {
             sumA += likesA.contains(postId) ? 1 : 0;
             sumU += likesU.contains(postId) ? 1 : 0;
         }
@@ -177,7 +201,7 @@ public class FeedService {
         double denomA = 0;
         double denomU = 0;
 
-        for (Long postId : allPosts) {
+        for (Long postId : allPostsIds) {
             double rA = (likesA.contains(postId) ? 1 : 0) - meanA;
             double rU = (likesU.contains(postId) ? 1 : 0) - meanU;
 
@@ -195,12 +219,12 @@ public class FeedService {
 
     private double calculatePostSimilarity(Set<Long> a, Set<Long> b) {
         if (a.isEmpty() || b.isEmpty()) return 0.0;
-
+        if (b.size() < 2) return 0.0;
         Set<Long> intersection = new HashSet<>(a);
         intersection.retainAll(b);
 
-        int minSize = Math.min(a.size(), b.size());
-        return (double) intersection.size() / minSize;
+        //int minSize = Math.min(a.size(), b.size());
+        return (double) intersection.size() / a.size();
     }
 
 

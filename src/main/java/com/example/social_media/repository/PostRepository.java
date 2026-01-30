@@ -1,6 +1,7 @@
 package com.example.social_media.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,7 +15,7 @@ public interface PostRepository extends JpaRepository<Post, Long>{
     List<Post> findAllByUserIdNot(Long userId);
     List<Post> findAllByUserIdIn(List<Long> userIds);
     List<Post> findAllByUserIdNotIn(List<Long> userIds);
-    List<Post> findAllByUserIdInAndCreatedAtAfter(List<Long> userIds, LocalDate date);
+    List<Post> findAllByUserIdInAndCreatedAtAfter(List<Long> userIds, LocalDateTime date);
     //Post findByHashtag(Hashtag hashtag);
     Post findById(int postId);
     int countByUserId(Long userId);

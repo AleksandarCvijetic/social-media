@@ -1,6 +1,7 @@
 package com.example.social_media.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +24,13 @@ public class PostReportController {
                                         @PathVariable int postId) {
         postReportService.reportPost(postReport, postId);
         return ResponseEntity.ok().build();
+    }
+    
+    @GetMapping("/post/{postId}/count")
+    public ResponseEntity<Long> getReportCount(@PathVariable int postId) {
+        return ResponseEntity.ok(
+            postReportService.getReportCountForPost(postId)
+        );
     }
 
 }

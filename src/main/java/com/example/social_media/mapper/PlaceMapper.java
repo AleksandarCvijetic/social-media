@@ -18,7 +18,7 @@ public class PlaceMapper {
         PlaceDto dto = new PlaceDto();
         dto.setId(place.getId());
         dto.setName(place.getName());
-
+        dto.setDescription(place.getDescription());
         if (place.getAddress() != null) {
             dto.setCity(place.getAddress().getCity());
             dto.setCountry(place.getAddress().getCountry());

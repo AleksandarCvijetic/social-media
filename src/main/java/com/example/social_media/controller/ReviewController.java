@@ -31,4 +31,8 @@ public class ReviewController {
         return reviewService.findAll();
     }
     
+    @GetMapping("/place/{placeId}")
+    public List<ReviewDto> getReviewsForPlace(@PathVariable Long placeId){
+        return reviewService.findAllByPlaceId(placeId);
+    }
 }

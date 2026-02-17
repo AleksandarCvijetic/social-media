@@ -47,4 +47,10 @@ public class PostReportService {
 
         return postReportRepository.save(report);
     }
+    
+    public long getReportCountForPost(int postId) {
+        Post post = postService.findById(postId);
+        return postReportRepository.countByReportedPost(post);
+    }
+
 }

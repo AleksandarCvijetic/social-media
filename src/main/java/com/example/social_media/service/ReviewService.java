@@ -1,5 +1,6 @@
 package com.example.social_media.service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,5 +69,24 @@ public class ReviewService {
         ReviewDto dto = new ReviewDto(review.getPlace().getId(), review.getUser().getId(), review.getGrade(),review.getDescription());
         return dto;
     }
+
+    public List<ReviewDto> findAllByPlaceId(Long placeId) {
+        List<Review> reviews = reviewRepository.findByPlace_Id(placeId);
+
+        List<ReviewDto> dtos = new ArrayList<>();
+
+        for (Review review : reviews) {
+            ReviewDto dto = new ReviewDto(
+                review.getPlace().getId(),
+                review.getUser().getId(),
+                review.getGrade(),
+                review.getDescription()
+            );
+            dtos.add(dto);
+        }
+
+        return dtos;
+    }
+
 
 }

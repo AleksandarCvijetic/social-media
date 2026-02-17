@@ -11,4 +11,5 @@ import com.example.social_media.entity.Review;
 public interface ReviewRepository extends JpaRepository<Review, Long>{
     List<Review> findAll();
     Review findById(int id);
+    List<Review> findByPlace_Id(Long placeId);
 }

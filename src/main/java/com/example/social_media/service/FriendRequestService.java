@@ -36,7 +36,7 @@ public class FriendRequestService {
     }
 
     @Transactional
-    public FriendRequest sendFriendRequest(Long receiverId){
+    public String sendFriendRequest(Long receiverId){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserInfo sender = userInfoService.findByEmail(auth.getName());
         if (sender.getId().equals(receiverId)) {
@@ -56,7 +56,8 @@ public class FriendRequestService {
             request.setSender(sender);
             request.setReceiver(receiver);
             //request.setStatus(FriendRequestStatus.PENDING);
-            return repository.save(request);
+            repository.save(request);
+            return "Friend request sent!";
         }
     }
 
@@ -77,6 +78,23 @@ public class FriendRequestService {
         repository.delete(request);
         return request;
     }
+
+    @Transactional
+    public String rejectFriendRequest(Long senderId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo receiver = userInfoService.findByEmail(auth.getName());
+        UserInfo sender = userInfoService.findById(senderId);
+
+        FriendRequest request = repository
+            .findBySenderAndReceiver(sender, receiver)
+            .orElseThrow(() ->
+                new IllegalStateException("Friend request does not exist")
+            );
+
+        repository.delete(request);
+        return "Request rejected!";
+    }
+
 
     public List<FriendRequestDto> getPendingRequestsForUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

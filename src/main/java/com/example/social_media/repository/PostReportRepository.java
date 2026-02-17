@@ -10,4 +10,5 @@ import com.example.social_media.entity.UserInfo;
 @Repository
 public interface PostReportRepository extends JpaRepository<PostReport, Long>{
     boolean existsByReportedPostAndReporter(Post post, UserInfo reporter);
+    long countByReportedPost(Post post);
 }

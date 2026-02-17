@@ -16,6 +16,6 @@ public class PlaceDto {
 
     private String city;
     private String country;
-
+    private String description;
     private Set<String> hashtags;
 }

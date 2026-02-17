@@ -10,6 +10,8 @@ import com.example.social_media.service.UserInfoService;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,9 +39,17 @@ public class UserController {
     }
 
     @PostMapping("/addNewUser")
-    public String addNewUser(@RequestBody UserInfo userInfo) {
-        return service.addUser(userInfo);
+    public ResponseEntity<String> addNewUser(@RequestBody UserInfo userInfo) {
+        try {
+            service.addUser(userInfo);
+            return ResponseEntity.ok("User added successfully!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT) // 409
+                    .body(e.getMessage());
+        }
     }
+
 
     // Removed the role checks here as they are already managed in SecurityConfig
 

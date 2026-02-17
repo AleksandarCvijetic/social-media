@@ -24,7 +24,7 @@ public class FriendRequestController {
     private final FriendRequestService service;
 
     @PostMapping("/{receiverId}/sendFriendRequest")
-    public FriendRequest sendFriendRequest(@PathVariable Long receiverId){
+    public String sendFriendRequest(@PathVariable Long receiverId){
         return service.sendFriendRequest(receiverId);
     }
 
@@ -38,6 +38,11 @@ public class FriendRequestController {
             request.getSender().getEmail(),
             request.getReceiver().getId()
         );
+    }
+
+    @PostMapping("/{senderId}/rejectFriendRequest")
+    public String rejectFriendRequest(@PathVariable Long senderId){
+        return service.rejectFriendRequest(senderId);
     }
 
     @GetMapping("/myRequests")

@@ -69,6 +69,10 @@ public class UserInfoService implements UserDetailsService {
 
     // Add any additional methods for registering or managing users
     public String addUser(UserInfo userInfo) {
+        // PROVERA EMAIL-A
+        if (repository.existsByEmail(userInfo.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
         // Encrypt password before saving
         userInfo.setPassword(encoder.encode(userInfo.getPassword())); 
         userInfo.setRoles("ROLE_USER");
